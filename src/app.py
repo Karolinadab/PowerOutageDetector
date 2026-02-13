@@ -8,6 +8,7 @@ import requests
 from config import load_config
 from http_client import send_request
 from log_writer import write_log
+from emailer import build_email_body, send_email
 from response_models import OutageRecord, parse_outage_response
 
 
@@ -74,16 +75,32 @@ if __name__ == "__main__":
         search_term = config.street_name.strip().lower()
         if search_term:
             for record in formatted_response:
-                if search_term in record.description.lower():
-                    print("Found in description!")
-
-                if any(
+                in_description = search_term in record.description.lower()
+                in_street = any(
                     addr.teryt
                     and addr.teryt.street_name
                     and search_term in addr.teryt.street_name.lower()
                     for addr in record.addresses
-                ):
+                )
+                if in_description:
+                    print("Found in description!")
+                if in_street:
                     print("Found in street name!")
+
+                if in_description or in_street:
+                    body = build_email_body(now, record, config.street_name)
+                    send_email(
+                        host=config.smtp_host,
+                        port=config.smtp_port,
+                        username=config.smtp_user,
+                        password=config.smtp_password,
+                        sender=config.smtp_from,
+                        recipients=config.smtp_to,
+                        use_tls=config.smtp_use_tls,
+                        subject="Powiadomienie o wylaczeniu pradu",
+                        body=body,
+                    )
+                    break
 
 
     

@@ -15,6 +15,13 @@ class AppConfig:
     timeout_seconds: int
     interval_days: int
     street_name: str
+    smtp_host: str
+    smtp_port: int
+    smtp_user: str
+    smtp_password: str
+    smtp_from: str
+    smtp_to: List[str]
+    smtp_use_tls: bool
 
 
 def parse_hours(value: str) -> List[int]:
@@ -47,6 +54,34 @@ def _read_int(name: str, default: int, min_value: int, max_value: int) -> int:
     return value
 
 
+def _read_required(name: str) -> str:
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        raise ValueError(f"{name} is required")
+    return raw.strip()
+
+
+def _read_email_list(name: str) -> List[str]:
+    raw = _read_required(name)
+    parts = [part.strip() for part in raw.split(",")]
+    recipients = [part for part in parts if part]
+    if not recipients:
+        raise ValueError(f"{name} must include at least one email")
+    return recipients
+
+
+def _read_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        return default
+    normalized = raw.strip().lower()
+    if normalized in {"1", "true", "yes", "y"}:
+        return True
+    if normalized in {"0", "false", "no", "n"}:
+        return False
+    raise ValueError(f"{name} must be a boolean")
+
+
 def load_config(env_path: str | None = None) -> AppConfig:
     load_dotenv(env_path)
 
@@ -66,11 +101,26 @@ def load_config(env_path: str | None = None) -> AppConfig:
     interval_days = _read_int("INTERVAL_DAYS", 7, 1, 365)
     street_name = os.getenv("STREET_NAME", "Ulica")
 
+    smtp_host = _read_required("SMTP_HOST")
+    smtp_port = _read_int("SMTP_PORT", 587, 1, 65535)
+    smtp_user = _read_required("SMTP_USER")
+    smtp_password = _read_required("SMTP_PASSWORD")
+    smtp_from = _read_required("SMTP_FROM")
+    smtp_to = _read_email_list("SMTP_TO")
+    smtp_use_tls = _read_bool("SMTP_USE_TLS", True)
+
     return AppConfig(
         hours=hours,
         city_sym=city_sym,
         poll_interval_seconds=poll_interval_seconds,
         timeout_seconds=timeout_seconds,
         interval_days=interval_days,
-        street_name=street_name
+        street_name=street_name,
+        smtp_host=smtp_host,
+        smtp_port=smtp_port,
+        smtp_user=smtp_user,
+        smtp_password=smtp_password,
+        smtp_from=smtp_from,
+        smtp_to=smtp_to,
+        smtp_use_tls=smtp_use_tls,
     )
