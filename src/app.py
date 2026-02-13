@@ -8,6 +8,7 @@ import requests
 from config import load_config
 from http_client import send_request
 from log_writer import write_log
+from response_models import OutageRecord, parse_outage_response
 
 
 LOG_DIR = "logs"
@@ -55,3 +56,35 @@ if __name__ == "__main__":
             )
     
     write_log(result, LOG_DIR)
+    formatted_response: list[OutageRecord] | None = None
+    try:
+        formatted_response = parse_outage_response(result.json_body)
+    except ValueError:
+        if result.text_body:
+            try:
+                formatted_response = parse_outage_response(result.text_body)
+            except ValueError:
+                formatted_response = None
+
+
+    if formatted_response is None:
+        print("Failed to parse response")
+
+    if formatted_response:
+        search_term = config.street_name.strip().lower()
+        if search_term:
+            for record in formatted_response:
+                if search_term in record.description.lower():
+                    print("Found in description!")
+
+                if any(
+                    addr.teryt
+                    and addr.teryt.street_name
+                    and search_term in addr.teryt.street_name.lower()
+                    for addr in record.addresses
+                ):
+                    print("Found in street name!")
+
+
+    
+    print("END!")

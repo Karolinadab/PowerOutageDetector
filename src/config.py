@@ -14,6 +14,7 @@ class AppConfig:
     poll_interval_seconds: int
     timeout_seconds: int
     interval_days: int
+    street_name: str
 
 
 def parse_hours(value: str) -> List[int]:
@@ -63,6 +64,7 @@ def load_config(env_path: str | None = None) -> AppConfig:
     poll_interval_seconds = _read_int("POLL_INTERVAL_SECONDS", 30, 1, 3600)
     timeout_seconds = _read_int("REQUEST_TIMEOUT_SECONDS", 10, 1, 120)
     interval_days = _read_int("INTERVAL_DAYS", 7, 1, 365)
+    street_name = os.getenv("STREET_NAME", "Ulica")
 
     return AppConfig(
         hours=hours,
@@ -70,4 +72,5 @@ def load_config(env_path: str | None = None) -> AppConfig:
         poll_interval_seconds=poll_interval_seconds,
         timeout_seconds=timeout_seconds,
         interval_days=interval_days,
+        street_name=street_name
     )
