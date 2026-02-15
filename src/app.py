@@ -7,7 +7,7 @@ import requests
 
 from config import load_config
 from http_client import send_request
-from log_writer import write_log
+from log_writer import write_log, write_message
 from emailer import build_email_body, send_email
 from response_models import OutageRecord, parse_outage_response
 
@@ -53,7 +53,7 @@ if __name__ == "__main__":
                 now=now,
                 city_sym=config.city_sym,
                 interval_days=config.interval_days,
-                timeout_seconds=config.timeout_seconds,
+                timeout_seconds=60,
             )
     
     write_log(result, LOG_DIR)
@@ -69,7 +69,12 @@ if __name__ == "__main__":
 
 
     if formatted_response is None:
-        print("Failed to parse response")
+        write_message(
+            log_dir=LOG_DIR,
+            timestamp=now,
+            level="ERROR",
+            message="Failed to parse response",
+        )
 
     if formatted_response:
         search_term = config.street_name.strip().lower()
@@ -83,9 +88,19 @@ if __name__ == "__main__":
                     for addr in record.addresses
                 )
                 if in_description:
-                    print("Found in description!")
+                    write_message(
+                        log_dir=LOG_DIR,
+                        timestamp=now,
+                        level="INFO",
+                        message=f"Outage in {config.street_name}! Found in description!",
+                    )
                 if in_street:
-                    print("Found in street name!")
+                    write_message(
+                        log_dir=LOG_DIR,
+                        timestamp=now,
+                        level="INFO",
+                        message=f"Outage in {config.street_name}! Found in street name!",
+                    )
 
                 if in_description or in_street:
                     body = build_email_body(now, record, config.street_name)
@@ -101,7 +116,3 @@ if __name__ == "__main__":
                         body=body,
                     )
                     break
-
-
-    
-    print("END!")
