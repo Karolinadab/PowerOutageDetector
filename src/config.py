@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 class AppConfig:
     hours: List[int]
     city_sym: str
+    city_name: str
     poll_interval_seconds: int
     timeout_seconds: int
     interval_days: int
@@ -96,6 +97,8 @@ def load_config(env_path: str | None = None) -> AppConfig:
     if not city_sym.isdigit():
         raise ValueError("CITY_SYM must be numeric")
 
+    city_name = _read_required("CITY_NAME")
+
     poll_interval_seconds = _read_int("POLL_INTERVAL_SECONDS", 30, 1, 3600)
     timeout_seconds = _read_int("REQUEST_TIMEOUT_SECONDS", 10, 1, 120)
     interval_days = _read_int("INTERVAL_DAYS", 7, 1, 365)
@@ -112,6 +115,7 @@ def load_config(env_path: str | None = None) -> AppConfig:
     return AppConfig(
         hours=hours,
         city_sym=city_sym,
+        city_name=city_name,
         poll_interval_seconds=poll_interval_seconds,
         timeout_seconds=timeout_seconds,
         interval_days=interval_days,

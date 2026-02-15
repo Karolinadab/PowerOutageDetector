@@ -14,12 +14,9 @@ def _parse_datetime(value: str) -> dt.datetime:
 
 def _format_remaining(now: dt.datetime, start_at: str, stop_at: str) -> str:
     start_dt = _parse_datetime(start_at)
-    stop_dt = _parse_datetime(stop_at)
 
     if now < start_dt:
         delta = start_dt - now
-    elif now < stop_dt:
-        delta = stop_dt - now
     else:
         delta = dt.timedelta(0)
 
@@ -44,19 +41,24 @@ def _format_addresses(addresses: list[Address]) -> str:
             street_name = address.teryt.street_name
         street_label = street_name or "(brak)"
         numbers = address.numbers or "(brak)"
-        lines.append(f"{idx}. Ulica: {street_label}, numery: {numbers}")
+        lines.append(f"{idx}) Ulica: {street_label}, numery: {numbers}")
 
     return "\n".join(lines)
 
 
-def build_email_body(now: dt.datetime, record: OutageRecord, street_name: str) -> str:
+def build_email_body(
+    now: dt.datetime,
+    record: OutageRecord,
+    city_name: str,
+    street_name: str,
+) -> str:
     remaining = _format_remaining(now, record.start_at, record.stop_at)
     addresses = _format_addresses(record.addresses)
     revoked_label = "Tak" if record.revoked else "Nie"
     revoked_description = record.revoked_description or "(brak)"
     return (
         "Cześć,\n\n"
-        f"Zbliża się wyłączenie planowe prądu dla Twojej ulicy: {street_name}.\n"
+        f"Zbliża się wyłączenie planowe prądu dla {city_name} na Twojej ulicy: {street_name}.\n"
         f"Nastąpi ono od {record.start_at} do {record.stop_at}.\n"
         f"POZOSTAŁY CZAS: {remaining}.\n\n"
         "Szczegóły przerwy:\n"
@@ -94,7 +96,7 @@ def send_email(
             client.starttls()
             try:
                 client.login(username, password)
-                # client.send_message(message)
+                client.send_message(message)
                 if log_dir is not None:
                     write_message(
                         log_dir=log_dir,
