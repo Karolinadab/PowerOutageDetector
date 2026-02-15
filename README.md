@@ -5,7 +5,7 @@ Small console app that runs in the background and polls the power-outage API on 
 ## Requirements
 - Python 3.11+
 
-## Setup
+## Local setup
 1. Create and activate a virtual environment. Example:
 	- `py -m venv .venv`
 	- `.venv\Scripts\activate`
@@ -16,3 +16,10 @@ Small console app that runs in the background and polls the power-outage API on 
 ## Run
 From the repo root:
 - `python -m power_outage_detector`
+
+## Docker
+Build the image from the repo root:
+- `docker build -t power-outage-detector .`
+
+Run with your `.env` file:
+- `docker run --rm --env-file .env power-outage-detector`
