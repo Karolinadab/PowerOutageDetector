@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import sys
 from typing import Optional
 
 from http_client import RequestResult
@@ -42,6 +43,15 @@ def _append_entry(path: str, lines: list[str], body: str | None) -> None:
             handle.write("\n")
 
 
+def _write_to_stdout(lines: list[str], body: str | None) -> None:
+    sys.stdout.write("\n".join(lines))
+    sys.stdout.write("\n\n")
+    if body:
+        sys.stdout.write(body)
+        sys.stdout.write("\n")
+    sys.stdout.flush()
+
+
 def write_log(result: RequestResult, log_dir: str) -> str:
     os.makedirs(log_dir, exist_ok=True)
 
@@ -65,6 +75,7 @@ def write_log(result: RequestResult, log_dir: str) -> str:
         body = result.text_body
 
     _append_entry(path, lines, body)
+    _write_to_stdout(lines, body)
     return path
 
 
@@ -86,4 +97,5 @@ def write_message(
     ]
 
     _append_entry(path, lines, None)
+    _write_to_stdout(lines, None)
     return path
