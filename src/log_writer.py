@@ -29,6 +29,24 @@ def _log_level(status_code: Optional[int], error: Optional[str]) -> str:
     return "INFO"
 
 
+def _strip_coordinates(payload: object) -> object:
+    if isinstance(payload, list):
+        cleaned: list[object] = []
+        for item in payload:
+            if isinstance(item, dict):
+                new_item = dict(item)
+                new_item.pop("coordinates", None)
+                cleaned.append(new_item)
+            else:
+                cleaned.append(item)
+        return cleaned
+    if isinstance(payload, dict):
+        new_payload = dict(payload)
+        new_payload.pop("coordinates", None)
+        return new_payload
+    return payload
+
+
 def _append_entry(path: str, lines: list[str], body: str | None) -> None:
     prefix = ""
     if os.path.exists(path) and os.path.getsize(path) > 0:
@@ -70,7 +88,11 @@ def write_log(result: RequestResult, log_dir: str) -> str:
 
     body = ""
     if result.json_body is not None:
-        body = json.dumps(result.json_body, indent=2, ensure_ascii=False)
+        body = json.dumps(
+            _strip_coordinates(result.json_body),
+            indent=2,
+            ensure_ascii=False,
+        )
     elif result.text_body is not None:
         body = result.text_body
 
