@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import time
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -13,6 +14,7 @@ from response_models import OutageRecord, parse_outage_response
 
 
 LOG_DIR = "logs"
+WARSAW_TZ = ZoneInfo("Europe/Warsaw")
 
 
 def _send_req_and_email(
@@ -101,8 +103,16 @@ def run_loop() -> None:
     session = requests.Session()
     last_sent: dict[int, dt.date] = {}
 
+    now = dt.datetime.now(tz=WARSAW_TZ)
+    write_message(
+        log_dir=LOG_DIR,
+        timestamp=now,
+        level="INFO",
+        message="App started.",
+    )
+
     while True:
-        now = dt.datetime.now()
+        now = dt.datetime.now(tz=WARSAW_TZ)
         for hour in config.hours:
             if now.hour == hour and last_sent.get(hour) != now.date():
                 _send_req_and_email(

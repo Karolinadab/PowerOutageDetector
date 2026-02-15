@@ -3,9 +3,12 @@ from __future__ import annotations
 import datetime as dt
 import smtplib
 from email.message import EmailMessage
+from zoneinfo import ZoneInfo
 
 from response_models import Address, OutageRecord
 from log_writer import write_message
+
+WARSAW_TZ = ZoneInfo("Europe/Warsaw")
 
 
 def _parse_datetime(value: str) -> dt.datetime:
@@ -100,7 +103,7 @@ def send_email(
                 if log_dir is not None:
                     write_message(
                         log_dir=log_dir,
-                        timestamp=dt.datetime.now(),
+                        timestamp=dt.datetime.now(tz=WARSAW_TZ),
                         level="INFO",
                         message="Email sent successfully: "
                         + subject
@@ -113,7 +116,7 @@ def send_email(
                 if log_dir is not None:
                     write_message(
                         log_dir=log_dir,
-                        timestamp=dt.datetime.now(),
+                        timestamp=dt.datetime.now(tz=WARSAW_TZ),
                         level="ERROR",
                         message="Failed to send email: " + str(e),
                     )
