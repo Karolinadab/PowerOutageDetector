@@ -16,7 +16,7 @@ def _parse_datetime(value: str) -> dt.datetime:
 
 
 def _format_remaining(now: dt.datetime, start_at: str, stop_at: str) -> str:
-    start_dt = _parse_datetime(start_at)
+    start_dt = _parse_datetime(start_at).replace(tzinfo=WARSAW_TZ)
 
     if now < start_dt:
         delta = start_dt - now

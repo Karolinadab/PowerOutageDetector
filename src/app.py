@@ -115,13 +115,21 @@ def run_loop() -> None:
         now = dt.datetime.now(tz=WARSAW_TZ)
         for hour in config.hours:
             if now.hour == hour and last_sent.get(hour) != now.date():
-                _send_req_and_email(
-                    config=config,
-                    session=session,
-                    now=now,
-                    log_dir=LOG_DIR,
-                )
-                last_sent[hour] = now.date()
+                try:
+                    _send_req_and_email(
+                        config=config,
+                        session=session,
+                        now=now,
+                        log_dir=LOG_DIR,
+                    )
+                    last_sent[hour] = now.date()
+                except Exception as e:
+                    write_message(
+                        log_dir=LOG_DIR,
+                        timestamp=now,
+                        level="ERROR",
+                        message=f"Error during request/email send: {type(e).__name__}: {e}",
+                    )
         time.sleep(config.poll_interval_seconds)
 
 
